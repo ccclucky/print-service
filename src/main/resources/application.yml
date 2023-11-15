@@ -1,0 +1,16 @@
+server:
+  port: 8080
+
+
+# minio ????????
+minio:
+  endpoint: https://minio.cclucky.top
+  accessKey: {REDACTED-ACCESSKEY}
+  secretKey: ${REDACTED-SECRETKEY}
+  bucketName: lab-print
+
+spring:
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB

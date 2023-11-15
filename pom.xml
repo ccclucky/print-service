@@ -11,8 +11,8 @@
     <groupId>com.cclucky</groupId>
     <artifactId>print-service</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>peint-server</name>
-    <description>peint-server</description>
+    <name>print-server</name>
+    <description>print-server</description>
     <properties>
         <java.version>1.8</java.version>
     </properties>
@@ -31,6 +31,29 @@
             <groupId>org.apache.pdfbox</groupId>
             <artifactId>pdfbox</artifactId>
             <version>2.0.24</version> <!-- 请根据最新版本进行更新 -->
+        </dependency>
+        <!-- minio 相关依赖 -->
+        <dependency>
+            <groupId>io.minio</groupId>
+            <artifactId>minio</artifactId>
+            <version>8.2.2</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.11</version>
+        </dependency>
+        <!-- alibaba的fastjson -->
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>fastjson</artifactId>
+            <version>1.2.51</version>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
         </dependency>
     </dependencies>
 
