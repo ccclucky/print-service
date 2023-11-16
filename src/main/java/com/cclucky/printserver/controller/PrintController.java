@@ -57,7 +57,7 @@ public class PrintController {
         }
         String filePath = minioProp.getEndpoint() + "/" + minioProp.getBucketName() + "/" + newFileName;
         printEventHandle.handle(filePath);
-        return filePath;
+        return filePath.split("/")[1];
     }
 
     /**
