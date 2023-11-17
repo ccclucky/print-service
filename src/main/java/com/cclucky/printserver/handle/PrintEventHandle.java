@@ -18,10 +18,8 @@ import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Component
 public class PrintEventHandle {
@@ -51,9 +49,10 @@ public class PrintEventHandle {
                     if (pss.length == 0) {
                         throw new RuntimeException("No printer services available.");
                     }
-                    PrintService ps = pss[pss.length - 1];
-                    System.out.println("Printing to " + ps);
-                    DocPrintJob job = ps.createPrintJob();
+//                    PrintService ps = pss[pss.length - 1];
+                    PrintService service = Arrays.stream(pss).filter(item -> item.getName().equals("HP")).collect(Collectors.toList()).get(0);
+                    System.out.println("Printing to " + service);
+                    DocPrintJob job = service.createPrintJob();
 
                     // 开始打印
                     job.print(doc, pras);
@@ -73,9 +72,13 @@ public class PrintEventHandle {
                 if (pss.length == 0) {
                     throw new RuntimeException("No printer services available.");
                 }
-                PrintService ps = pss[pss.length - 1];
-                System.out.println("Printing to " + ps);
-                DocPrintJob job = ps.createPrintJob();
+                for (PrintService ps : pss) {
+                    System.out.println(ps.getName());
+                    System.out.println();
+                }
+                PrintService service = Arrays.stream(pss).filter(item -> item.getName().equals("HP")).collect(Collectors.toList()).get(0);
+                System.out.println("Printing to " + service);
+                DocPrintJob job = service.createPrintJob();
 
                 // 开始打印
                 job.print(doc, pras);
