@@ -1,13 +1,16 @@
 package com.cclucky.printserver;
 
+import com.cclucky.printserver.handle.JobEventHandle;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.rendering.PDFRenderer;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.imageio.ImageIO;
 import javax.print.*;
-import javax.print.attribute.HashPrintRequestAttributeSet;
-import javax.print.attribute.PrintRequestAttributeSet;
+import javax.print.attribute.*;
 import javax.print.attribute.standard.Copies;
+import javax.print.attribute.standard.PrinterIsAcceptingJobs;
+import javax.print.event.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
@@ -63,18 +66,23 @@ public class PrintExample {
             PrintRequestAttributeSet pras = new HashPrintRequestAttributeSet();
             pras.add(new Copies(1));
 
+            // 在每次循环中创建一个新的打印工作
+            PrintService[] pss = PrintServiceLookup.lookupPrintServices(null, null);
+            if (pss.length == 0) {
+                throw new RuntimeException("No printer services available.");
+            }
+            PrintService ps = pss[pss.length - 1];
+
             if (filename.endsWith("pdf")) {
                 List<Map<String, String>> maps = this.pdfToImage(filename, "jpg");
                 for (Map<String, String> map : maps) {
                     FileInputStream fin = new FileInputStream(map.get("filePath"));
                     Doc doc = new SimpleDoc(fin, DocFlavor.INPUT_STREAM.JPEG, null);
 
-                    // 在每次循环中创建一个新的打印工作
-                    PrintService[] pss = PrintServiceLookup.lookupPrintServices(null, pras);
-                    if (pss.length == 0) {
-                        throw new RuntimeException("No printer services available.");
-                    }
-                    PrintService ps = pss[pss.length - 1];
+                    // 获取打印机是否接受新的打印任务的属性
+                    PrintServiceAttributeSet attributes = ps.getAttributes();
+                    Attribute attr = attributes.get(PrinterIsAcceptingJobs.class);
+
                     System.out.println("Printing to " + ps);
                     DocPrintJob job = ps.createPrintJob();
 
@@ -87,12 +95,10 @@ public class PrintExample {
                 FileInputStream fin = new FileInputStream(filename);
                 Doc doc = new SimpleDoc(fin, DocFlavor.INPUT_STREAM.AUTOSENSE, null);
 
-                // 在每次循环中创建一个新的打印工作
-                PrintService[] pss = PrintServiceLookup.lookupPrintServices(null, pras);
-                if (pss.length == 0) {
-                    throw new RuntimeException("No printer services available.");
-                }
-                PrintService ps = pss[pss.length - 1];
+                // 获取打印机是否接受新的打印任务的属性
+                PrintServiceAttributeSet attributes = ps.getAttributes();
+                Attribute attr = attributes.get(PrinterIsAcceptingJobs.class);
+
                 System.out.println("Printing to " + ps);
                 DocPrintJob job = ps.createPrintJob();
 
@@ -105,7 +111,6 @@ public class PrintExample {
             e.printStackTrace();
         }
     }
-
 
     /**
      * 使用文件流整个pdf转换成图片
