@@ -48,8 +48,8 @@ public class PrintEventHandle {
                 throw new RuntimeException("No printer services available.");
             }
 
-//            PrintService service = Arrays.stream(pss).filter(item -> item.getName().equals("HP")).collect(Collectors.toList()).get(0);
-            PrintService service = pss[pss.length - 1];
+            PrintService service = Arrays.stream(pss).filter(item -> item.getName().equals("HP")).collect(Collectors.toList()).get(0);
+//            PrintService service = pss[pss.length - 1];
             System.out.println("Printing to " + service);
 
             // 获取打印机是否接受新的打印任务的属性
