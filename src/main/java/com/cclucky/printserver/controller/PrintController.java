@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Calendar;
+import java.util.Map;
 
 
 @RestController
@@ -28,11 +29,10 @@ public class PrintController {
     @Autowired
     private PrintEventHandle printEventHandle;
 
-
     /**
      * 文件上传
-     *
-     * @param file
+     * @param file 文件
+     * @return Result<String> data为当前打印队列任务数量
      */
     @PostMapping("/upload")
     public Result<String> upload(MultipartFile file) {
@@ -56,8 +56,8 @@ public class PrintController {
             return Result.error("上传失败");
         }
         String filePath = minioProp.getEndpoint() + "/" + minioProp.getBucketName() + "/" + newFileName;
-        String handleRes = printEventHandle.handle(filePath);
-        return Result.success(handleRes);
+        Map<String, String> handleRes = printEventHandle.handle(filePath);
+        return Result.success(handleRes.get("count"), handleRes.get("msg"));
     }
 
     /**

@@ -33,8 +33,10 @@ public class PrintEventHandle {
     @Autowired
     private MinioProp minioProp;
 
-    public String handle(String filename) {
+    public Map<String, String> handle(String filename) {
+        Map<String, String> res = new HashMap<>();
         String msg = "正在打印中";
+        Integer count = 0;
         try {
             // 获得打印属性
             PrintRequestAttributeSet pras = new HashPrintRequestAttributeSet();
@@ -49,6 +51,10 @@ public class PrintEventHandle {
 //            PrintService service = Arrays.stream(pss).filter(item -> item.getName().equals("HP")).collect(Collectors.toList()).get(0);
             PrintService service = pss[pss.length - 1];
             System.out.println("Printing to " + service);
+
+            // 获取打印机是否接受新的打印任务的属性
+            PrintServiceAttributeSet attributes = service.getAttributes();
+            Attribute attr = attributes.get(QueuedJobCount.class);
 
             if (filename.endsWith("pdf")) {
                 List<Map<String, String>> maps = this.pdfToImage(filename, "jpg");
@@ -66,12 +72,12 @@ public class PrintEventHandle {
                     inputStream.close();
                 }
 
-                // 获取打印机是否接受新的打印任务的属性
-                PrintServiceAttributeSet attributes = service.getAttributes();
-                Attribute attr = attributes.get(QueuedJobCount.class);
-
-                if (Integer.parseInt(String.valueOf(attr)) > 0) {
+                // 当前任务队列信息
+                int jobCount = Integer.parseInt(String.valueOf(attr));
+                if (jobCount > 0) {
                     msg = "排队中，请稍后";
+                    res.put("msg", msg);
+                    res.put("count", String.valueOf(jobCount));
                 }
 
             } else {
@@ -86,12 +92,12 @@ public class PrintEventHandle {
                 // 开始打印
                 job.print(doc, pras);
 
-                // 获取打印机是否接受新的打印任务的属性
-                PrintServiceAttributeSet attributes = service.getAttributes();
-                Attribute attr = attributes.get(QueuedJobCount.class);
-
-                if (Integer.parseInt(String.valueOf(attr)) > 0) {
+                // 当前任务队列信息
+                int jobCount = Integer.parseInt(String.valueOf(attr));
+                if (jobCount > 0) {
                     msg = "排队中，请稍后";
+                    res.put("msg", msg);
+                    res.put("count", String.valueOf(jobCount));
                 }
 
                 inputStream.close();
@@ -99,7 +105,7 @@ public class PrintEventHandle {
         } catch (IOException | PrintException e) {
             e.printStackTrace();
         }
-        return msg;
+        return res;
     }
 
 
