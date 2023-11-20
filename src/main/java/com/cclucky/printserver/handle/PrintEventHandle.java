@@ -1,5 +1,6 @@
 package com.cclucky.printserver.handle;
 
+import com.cclucky.printserver.common.result.Result;
 import com.cclucky.printserver.config.prop.MinioProp;
 import com.cclucky.printserver.utils.ConvertToMultipartFileUtil;
 import com.cclucky.printserver.utils.MinioUtil;
@@ -11,9 +12,12 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.imageio.ImageIO;
 import javax.print.*;
+import javax.print.attribute.Attribute;
 import javax.print.attribute.HashPrintRequestAttributeSet;
 import javax.print.attribute.PrintRequestAttributeSet;
+import javax.print.attribute.PrintServiceAttributeSet;
 import javax.print.attribute.standard.Copies;
+import javax.print.attribute.standard.QueuedJobCount;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.HttpURLConnection;
@@ -29,29 +33,31 @@ public class PrintEventHandle {
     @Autowired
     private MinioProp minioProp;
 
-    public void handle(String filename) {
+    public String handle(String filename) {
+        String msg = "正在打印中";
         try {
             // 获得打印属性
             PrintRequestAttributeSet pras = new HashPrintRequestAttributeSet();
             pras.add(new Copies(1));
 
+            // 获取打印服务
+            PrintService[] pss = PrintServiceLookup.lookupPrintServices(null, pras);
+            if (pss.length == 0) {
+                throw new RuntimeException("No printer services available.");
+            }
+
+//            PrintService service = Arrays.stream(pss).filter(item -> item.getName().equals("HP")).collect(Collectors.toList()).get(0);
+            PrintService service = pss[pss.length - 1];
+            System.out.println("Printing to " + service);
+
             if (filename.endsWith("pdf")) {
                 List<Map<String, String>> maps = this.pdfToImage(filename, "jpg");
                 for (Map<String, String> map : maps) {
-//                    FileInputStream fin = new FileInputStream(map.get("filePath"));
                     URL url = new URL(map.get("filePath"));
                     HttpURLConnection httpUrlConnection = (HttpURLConnection) url.openConnection();
                     InputStream inputStream = httpUrlConnection.getInputStream();
                     Doc doc = new SimpleDoc(inputStream, DocFlavor.INPUT_STREAM.JPEG, null);
 
-                    // 在每次循环中创建一个新的打印工作
-                    PrintService[] pss = PrintServiceLookup.lookupPrintServices(null, pras);
-                    if (pss.length == 0) {
-                        throw new RuntimeException("No printer services available.");
-                    }
-//                    PrintService ps = pss[pss.length - 1];
-                    PrintService service = Arrays.stream(pss).filter(item -> item.getName().equals("HP")).collect(Collectors.toList()).get(0);
-                    System.out.println("Printing to " + service);
                     DocPrintJob job = service.createPrintJob();
 
                     // 开始打印
@@ -59,35 +65,41 @@ public class PrintEventHandle {
 
                     inputStream.close();
                 }
+
+                // 获取打印机是否接受新的打印任务的属性
+                PrintServiceAttributeSet attributes = service.getAttributes();
+                Attribute attr = attributes.get(QueuedJobCount.class);
+
+                if (Integer.parseInt(String.valueOf(attr)) > 0) {
+                    msg = "排队中，请稍后";
+                }
+
             } else {
                 URL url = new URL(filename);
                 HttpURLConnection httpUrlConnection = (HttpURLConnection) url.openConnection();
                 InputStream inputStream = httpUrlConnection.getInputStream();
 
-//                FileInputStream fin = new FileInputStream(filename);
                 Doc doc = new SimpleDoc(inputStream, DocFlavor.INPUT_STREAM.GIF, null);
 
-                // 在每次循环中创建一个新的打印工作
-                PrintService[] pss = PrintServiceLookup.lookupPrintServices(null, pras);
-                if (pss.length == 0) {
-                    throw new RuntimeException("No printer services available.");
-                }
-                for (PrintService ps : pss) {
-                    System.out.println(ps.getName());
-                    System.out.println();
-                }
-                PrintService service = Arrays.stream(pss).filter(item -> item.getName().equals("HP")).collect(Collectors.toList()).get(0);
-                System.out.println("Printing to " + service);
                 DocPrintJob job = service.createPrintJob();
 
                 // 开始打印
                 job.print(doc, pras);
+
+                // 获取打印机是否接受新的打印任务的属性
+                PrintServiceAttributeSet attributes = service.getAttributes();
+                Attribute attr = attributes.get(QueuedJobCount.class);
+
+                if (Integer.parseInt(String.valueOf(attr)) > 0) {
+                    msg = "排队中，请稍后";
+                }
+
                 inputStream.close();
-//                fin.close();
             }
         } catch (IOException | PrintException e) {
             e.printStackTrace();
         }
+        return msg;
     }
 
 

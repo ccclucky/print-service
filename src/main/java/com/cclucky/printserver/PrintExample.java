@@ -10,6 +10,7 @@ import javax.print.*;
 import javax.print.attribute.*;
 import javax.print.attribute.standard.Copies;
 import javax.print.attribute.standard.PrinterIsAcceptingJobs;
+import javax.print.attribute.standard.QueuedJobCount;
 import javax.print.event.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -97,7 +98,11 @@ public class PrintExample {
 
                 // 获取打印机是否接受新的打印任务的属性
                 PrintServiceAttributeSet attributes = ps.getAttributes();
-                Attribute attr = attributes.get(PrinterIsAcceptingJobs.class);
+                Attribute attr = attributes.get(QueuedJobCount.class);
+
+                if (Integer.parseInt(String.valueOf(attr)) > 0) {
+                    System.out.println("排队中，请稍后");
+                }
 
                 System.out.println("Printing to " + ps);
                 DocPrintJob job = ps.createPrintJob();

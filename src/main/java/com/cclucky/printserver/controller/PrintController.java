@@ -1,5 +1,6 @@
 package com.cclucky.printserver.controller;
 
+import com.cclucky.printserver.common.result.Result;
 import com.cclucky.printserver.config.MinioConfig;
 import com.cclucky.printserver.config.prop.MinioProp;
 import com.cclucky.printserver.handle.PrintEventHandle;
@@ -34,7 +35,7 @@ public class PrintController {
      * @param file
      */
     @PostMapping("/upload")
-    public String upload(MultipartFile file) {
+    public Result<String> upload(MultipartFile file) {
         String newFileName;
         try {
             //文件名
@@ -52,12 +53,11 @@ public class PrintController {
             minioUtils.uploadFile(minioProp.getBucketName(), file, newFileName, contentType);
         } catch (Exception e) {
             e.printStackTrace();
-            log.error("上传失败");
-            return "上传失败";
+            return Result.error("上传失败");
         }
         String filePath = minioProp.getEndpoint() + "/" + minioProp.getBucketName() + "/" + newFileName;
-        printEventHandle.handle(filePath);
-        return filePath.split("/")[1];
+        String handleRes = printEventHandle.handle(filePath);
+        return Result.success(handleRes);
     }
 
     /**
